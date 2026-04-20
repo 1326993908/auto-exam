@@ -1,0 +1,60 @@
+# ============================
+# 服务器配置
+# ============================
+server:
+  port: 8080
+
+# ============================
+# 数据源配置（默认使用H2内存数据库，方便演示）
+# 如需使用MySQL，取消注释下方MySQL配置并注释H2配置
+# ============================
+spring:
+  datasource:
+    # ---- H2 内存数据库（默认）----
+    url: jdbc:h2:mem:examdb;DB_CLOSE_DELAY=-1;MODE=MYSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+    # 确保 DDL 先执行完毕再初始化数据
+    initialization-mode: always
+
+    # ---- MySQL（生产环境）----
+    # url: jdbc:mysql://localhost:3306/auto_exam?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8
+    # driver-class-name: com.mysql.cj.jdbc.Driver
+    # username: root
+    # password: your_password
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    # 注意：H2 内存数据库应使用 H2Dialect，MySQL 数据库才使用 MySQL5InnoDBDialect / MySQL8Dialect
+    # 如果切换到 MySQL，请同步修改上方数据源配置和此方言
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  thymeleaf:
+    cache: false
+
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+
+# ============================
+# 自定义配置
+# ============================
+exam:
+  # 遗传算法参数
+  ga:
+    population-size: 50       # 种群大小
+    max-generations: 200      # 最大迭代次数
+    crossover-rate: 0.8       # 交叉概率
+    mutation-rate: 0.1        # 变异概率
+    elite-count: 2            # 精英保留数量
