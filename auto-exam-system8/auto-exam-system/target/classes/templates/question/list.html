@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>题库管理 - 自动组卷系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">📝 自动组卷系统</div>
+        <div class="navbar-menu">
+            <a th:href="@{/dashboard}" class="nav-link">控制台</a>
+            <a th:href="@{/question/list}" class="nav-link active">题库管理</a>
+            <a th:href="@{/paper/list}" class="nav-link">试卷管理</a>
+            <a th:href="@{/paper/generate}" class="nav-link">自动组卷</a>
+        </div>
+        <div class="navbar-user">
+            <span>欢迎, <strong sec:authentication="name">xyf</strong></span>
+            <a th:href="@{/logout}" class="btn btn-sm">退出</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h2 class="page-title">📚 题库管理</h2>
+            <div>
+                <form th:action="@{/question/import-sample}" method="post" style="display:inline">
+                    <button type="submit" class="btn btn-secondary" onclick="return confirm('将导入示例题目，已有的不会重复导入')">📥 导入示例题</button>
+                </form>
+                <a th:href="@{/question/add}" class="btn btn-primary">➕ 添加题目</a>
+            </div>
+        </div>
+
+        <!-- 搜索筛选 -->
+        <div class="card">
+            <div class="card-body">
+                <form th:action="@{/question/list}" method="get" class="search-form">
+                    <div class="form-group-inline">
+                        <label>科目：</label>
+                        <select name="subject">
+                            <option value="">全部科目</option>
+                            <option th:each="s : ${subjects}" th:value="${s}" th:text="${s}"
+                                    th:selected="${s == currentSubject}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group-inline">
+                        <label>题型：</label>
+                        <select name="type">
+                            <option value="">全部题型</option>
+                            <option value="1" th:selected="${currentType == 1}">单选题</option>
+                            <option value="2" th:selected="${currentType == 2}">多选题</option>
+                            <option value="3" th:selected="${currentType == 3}">判断题</option>
+                            <option value="4" th:selected="${currentType == 4}">填空题</option>
+                            <option value="5" th:selected="${currentType == 5}">简答题</option>
+                        </select>
+                    </div>
+                    <div class="form-group-inline">
+                        <label>关键词：</label>
+                        <input type="text" name="keyword" th:value="${keyword}" placeholder="搜索题目内容">
+                    </div>
+                    <button type="submit" class="btn btn-sm">🔍 搜索</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 提示信息 -->
+        <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+        <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
+
+        <!-- 题目列表 -->
+        <div class="card">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>题型</th>
+                        <th>难度</th>
+                        <th>科目</th>
+                        <th>章节</th>
+                        <th>题目内容</th>
+                        <th>分值</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="q : ${questions}">
+                        <td th:text="${q.id}"></td>
+                        <td>
+                            <span class="tag tag-type" th:switch="${q.type}">
+                                <span th:case="1">单选题</span>
+                                <span th:case="2">多选题</span>
+                                <span th:case="3">判断题</span>
+                                <span th:case="4">填空题</span>
+                                <span th:case="5">简答题</span>
+                            </span>
+                        </td>
+                        <td>
+                            <span th:switch="${q.difficulty}" class="tag">
+                                <span th:case="1" class="tag-easy">简单</span>
+                                <span th:case="2" class="tag-medium">中等</span>
+                                <span th:case="3" class="tag-hard">困难</span>
+                            </span>
+                        </td>
+                        <td th:text="${q.subject}"></td>
+                        <td th:text="${q.chapter}"></td>
+                        <td class="content-cell" th:text="${#strings.abbreviate(q.content, 50)}"></td>
+                        <td th:text="${q.score} + '分'"></td>
+                        <td>
+                            <a th:href="@{'/question/edit/' + ${q.id}}" class="btn btn-sm">编辑</a>
+                            <a th:href="@{'/question/delete/' + ${q.id}}" class="btn btn-sm btn-danger"
+                               onclick="return confirm('确定删除此题目？')">删除</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${questions.isEmpty()}">
+                        <td colspan="8" class="text-center text-muted">暂无题目数据，请先添加或导入题目</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- 分页 -->
+            <div class="pagination" th:if="${questions.totalPages > 1}">
+                <a th:href="@{/question/list(subject=${currentSubject},type=${currentType},keyword=${keyword},page=${questions.number - 1})}"
+                   th:if="${!questions.first}" class="page-link">上一页</a>
+                <span class="page-info">第 <span th:text="${questions.number + 1}"></span> / <span th:text="${questions.totalPages}"></span> 页</span>
+                <a th:href="@{/question/list(subject=${currentSubject},type=${currentType},keyword=${keyword},page=${questions.number + 1})}"
+                   th:if="${!questions.last}" class="page-link">下一页</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

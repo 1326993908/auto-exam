@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>试卷管理 - 自动组卷系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">📝 自动组卷系统</div>
+        <div class="navbar-menu">
+            <a th:href="@{/dashboard}" class="nav-link">控制台</a>
+            <a th:href="@{/question/list}" class="nav-link">题库管理</a>
+            <a th:href="@{/paper/list}" class="nav-link active">试卷管理</a>
+            <a th:href="@{/paper/generate}" class="nav-link">自动组卷</a>
+        </div>
+        <div class="navbar-user">
+            <span>欢迎, <strong sec:authentication="name">xyf</strong></span>
+            <a th:href="@{/logout}" class="btn btn-sm">退出</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h2 class="page-title">📋 试卷管理</h2>
+            <a th:href="@{/paper/generate}" class="btn btn-primary">🧬 自动组卷</a>
+        </div>
+
+        <div class="alert alert-success" th:if="${success}" th:text="${success}"></div>
+        <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
+
+        <div class="card">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>试卷名称</th>
+                        <th>科目</th>
+                        <th>总分</th>
+                        <th>时长</th>
+                        <th>难度系数</th>
+                        <th>组卷方式</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${papers}">
+                        <td th:text="${p.id}"></td>
+                        <td th:text="${p.name}"></td>
+                        <td><span class="tag" th:text="${p.subject}"></span></td>
+                        <td th:text="${p.totalScore} + '分'"></td>
+                        <td th:text="${p.duration} + '分钟'"></td>
+                        <td>
+                            <span class="difficulty-bar">
+                                <span class="difficulty-fill" th:style="'width:' + ${(p.difficultyFactor != null ? p.difficultyFactor * 100 : 0)} + '%'"></span>
+                            </span>
+                            <span th:text="${p.difficultyFactor != null ? #numbers.formatDecimal(p.difficultyFactor, 1, 2) : '-'}"></span>
+                        </td>
+                        <td>
+                            <span th:switch="${p.generateType}">
+                                <span th:case="1" class="tag">手动</span>
+                                <span th:case="2" class="tag tag-ga">🧬 遗传算法</span>
+                            </span>
+                        </td>
+                        <td>
+                            <span th:switch="${p.status}">
+                                <span th:case="0" class="tag tag-draft">草稿</span>
+                                <span th:case="1" class="tag tag-published">已发布</span>
+                            </span>
+                        </td>
+                        <td th:text="${#temporals.format(p.createTime, 'yyyy-MM-dd HH:mm')}"></td>
+                        <td class="action-cell">
+                            <a th:href="@{'/paper/view/' + ${p.id}}" class="btn btn-sm">查看</a>
+                            <a th:href="@{'/paper/publish/' + ${p.id}}" class="btn btn-sm btn-success"
+                               th:if="${p.status == 0}" onclick="return confirm('确认发布此试卷？')">发布</a>
+                            <a th:href="@{'/paper/delete/' + ${p.id}}" class="btn btn-sm btn-danger"
+                               onclick="return confirm('确定删除此试卷？不可恢复！')">删除</a>
+                        </td>
+                    </tr>
+                    <tr th:if="${papers.isEmpty()}">
+                        <td colspan="10" class="text-center text-muted">暂无试卷，请使用自动组卷功能生成试卷</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

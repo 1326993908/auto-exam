@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>试卷详情 - 自动组卷系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">📝 自动组卷系统</div>
+        <div class="navbar-menu">
+            <a th:href="@{/dashboard}" class="nav-link">控制台</a>
+            <a th:href="@{/question/list}" class="nav-link">题库管理</a>
+            <a th:href="@{/paper/list}" class="nav-link active">试卷管理</a>
+            <a th:href="@{/paper/generate}" class="nav-link">自动组卷</a>
+        </div>
+        <div class="navbar-user">
+            <span>欢迎, <strong sec:authentication="name">xyf</strong></span>
+            <a th:href="@{/logout}" class="btn btn-sm">退出</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h2 class="page-title">📋 试卷详情</h2>
+            <div>
+                <a th:href="@{/paper/list}" class="btn">← 返回列表</a>
+                <a th:href="@{'/paper/publish/' + ${paper.id}}" class="btn btn-success"
+                   th:if="${paper.status == 0}" onclick="return confirm('确认发布？')">发布试卷</a>
+            </div>
+        </div>
+
+        <!-- 试卷头部信息 -->
+        <div class="card paper-header">
+            <div class="paper-title" th:text="${paper.name}">试卷名称</div>
+            <div class="paper-meta">
+                <span>科目：<strong th:text="${paper.subject}"></strong></span>
+                <span>总分：<strong th:text="${paper.totalScore} + '分'"></strong></span>
+                <span>时长：<strong th:text="${paper.duration} + '分钟'"></strong></span>
+                <span>难度：<strong th:text="${paper.difficultyFactor != null ? #numbers.formatDecimal(paper.difficultyFactor, 1, 2) : '-'}"></strong></span>
+                <span>
+                    状态：
+                    <span th:if="${paper.status == 0}" class="tag tag-draft">草稿</span>
+                    <span th:if="${paper.status == 1}" class="tag tag-published">已发布</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- ========== 一、单选题 ========== -->
+        <div class="card" th:if="${not #lists.isEmpty(singleChoiceQuestions)}">
+            <div class="card-header" th:text="'一、单选题（共' + ${#lists.size(singleChoiceQuestions)} + '题）'"></div>
+            <div class="card-body">
+                <div class="question-item" th:each="pq,stat : ${singleChoiceQuestions}">
+                    <div class="question-header">
+                        <span class="question-num" th:text="${stat.index + 1} + '.'"></span>
+                        <span class="question-content" th:text="${pq.question.content}"></span>
+                        <span class="question-score" th:text="'（' + ${pq.score} + '分）'"></span>
+                    </div>
+                    <div class="question-options" th:if="${pq.question.options != null}">
+                        <div th:each="opt : ${#strings.arraySplit(pq.question.options.replace('[','').replace(']','').replace('\"',''), ',')}"
+                             class="option-item" th:text="${#strings.trim(opt)}"></div>
+                    </div>
+                    <div class="question-answer">
+                        <strong>答案：</strong><span th:text="${pq.question.answer}"></span>
+                    </div>
+                    <div class="question-analysis" th:if="${pq.question.analysis != null}">
+                        <strong>解析：</strong><span th:text="${pq.question.analysis}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 二、多选题 ========== -->
+        <div class="card" th:if="${not #lists.isEmpty(multiChoiceQuestions)}">
+            <div class="card-header" th:text="'二、多选题（共' + ${#lists.size(multiChoiceQuestions)} + '题）'"></div>
+            <div class="card-body">
+                <div class="question-item" th:each="pq,stat : ${multiChoiceQuestions}">
+                    <div class="question-header">
+                        <span class="question-num" th:text="${stat.index + 1} + '.'"></span>
+                        <span class="question-content" th:text="${pq.question.content}"></span>
+                        <span class="question-score" th:text="'（' + ${pq.score} + '分）'"></span>
+                    </div>
+                    <div class="question-options" th:if="${pq.question.options != null}">
+                        <div th:each="opt : ${#strings.arraySplit(pq.question.options.replace('[','').replace(']','').replace('\"',''), ',')}"
+                             class="option-item" th:text="${#strings.trim(opt)}"></div>
+                    </div>
+                    <div class="question-answer">
+                        <strong>答案：</strong><span th:text="${pq.question.answer}"></span>
+                    </div>
+                    <div class="question-analysis" th:if="${pq.question.analysis != null}">
+                        <strong>解析：</strong><span th:text="${pq.question.analysis}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 三、判断题 ========== -->
+        <div class="card" th:if="${not #lists.isEmpty(judgeQuestions)}">
+            <div class="card-header" th:text="'三、判断题（共' + ${#lists.size(judgeQuestions)} + '题）'"></div>
+            <div class="card-body">
+                <div class="question-item" th:each="pq,stat : ${judgeQuestions}">
+                    <div class="question-header">
+                        <span class="question-num" th:text="${stat.index + 1} + '.'"></span>
+                        <span class="question-content" th:text="${pq.question.content}"></span>
+                        <span class="question-score" th:text="'（' + ${pq.score} + '分）'"></span>
+                    </div>
+                    <div class="question-answer">
+                        <strong>答案：</strong><span th:text="${pq.question.answer}"></span>
+                    </div>
+                    <div class="question-analysis" th:if="${pq.question.analysis != null}">
+                        <strong>解析：</strong><span th:text="${pq.question.analysis}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 四、填空题 ========== -->
+        <div class="card" th:if="${not #lists.isEmpty(fillQuestions)}">
+            <div class="card-header" th:text="'四、填空题（共' + ${#lists.size(fillQuestions)} + '题）'"></div>
+            <div class="card-body">
+                <div class="question-item" th:each="pq,stat : ${fillQuestions}">
+                    <div class="question-header">
+                        <span class="question-num" th:text="${stat.index + 1} + '.'"></span>
+                        <span class="question-content" th:text="${pq.question.content}"></span>
+                        <span class="question-score" th:text="'（' + ${pq.score} + '分）'"></span>
+                    </div>
+                    <div class="question-answer">
+                        <strong>答案：</strong><span th:text="${pq.question.answer}"></span>
+                    </div>
+                    <div class="question-analysis" th:if="${pq.question.analysis != null}">
+                        <strong>解析：</strong><span th:text="${pq.question.analysis}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== 五、简答题 ========== -->
+        <div class="card" th:if="${not #lists.isEmpty(shortAnswerQuestions)}">
+            <div class="card-header" th:text="'五、简答题（共' + ${#lists.size(shortAnswerQuestions)} + '题）'"></div>
+            <div class="card-body">
+                <div class="question-item" th:each="pq,stat : ${shortAnswerQuestions}">
+                    <div class="question-header">
+                        <span class="question-num" th:text="${stat.index + 1} + '.'"></span>
+                        <span class="question-content" th:text="${pq.question.content}"></span>
+                        <span class="question-score" th:text="'（' + ${pq.score} + '分）'"></span>
+                    </div>
+                    <div class="question-answer">
+                        <strong>答案：</strong><span th:text="${pq.question.answer}"></span>
+                    </div>
+                    <div class="question-analysis" th:if="${pq.question.analysis != null}">
+                        <strong>解析：</strong><span th:text="${pq.question.analysis}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
